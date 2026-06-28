@@ -61,7 +61,6 @@ class UsageStatsCollector(private val context: Context) {
         val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
         val event = UsageEvents.Event()
 
-        // 앱별 마지막 RESUME 시각 저장
         val resumeMap = mutableMapOf<String, Long>()
         val result = mutableListOf<AppUsageEntity>()
         val dateStr = dateFormat.format(Date(startTime))
@@ -71,8 +70,8 @@ class UsageStatsCollector(private val context: Context) {
 
             val packageName = event.packageName ?: continue
 
-            // 자기 자신 제외
-            if (packageName == context.packageName) continue
+            // 자기 자신 및 시스템 앱 제외
+            if (shouldExclude(packageName)) continue
 
             when (event.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
@@ -84,7 +83,6 @@ class UsageStatsCollector(private val context: Context) {
                     val resumeTime = resumeMap.remove(packageName) ?: continue
                     val duration = event.timeStamp - resumeTime
 
-                    // 1초 미만 무시 (광고/팝업 등)
                     if (duration < 1000) continue
 
                     val appName = getAppName(packageName)
@@ -123,12 +121,43 @@ class UsageStatsCollector(private val context: Context) {
         return result.sortedBy { it.foregroundTime }
     }
 
+    /**
+     * 제외할 시스템/런처 앱 패키지
+     */
+    private fun shouldExclude(packageName: String): Boolean {
+        // 자기 자신
+        if (packageName == context.packageName) return true
+
+        // 제외할 시스템 앱 목록
+        val excludeList = setOf(
+            "com.sec.android.app.launcher",       // 삼성 런처
+            "com.sec.android.app.launcher3",
+            "com.android.launcher",               // 기본 런처
+            "com.android.launcher2",
+            "com.android.launcher3",
+            "com.google.android.apps.nexuslauncher",
+            "com.microsoft.launcher",
+            "com.action.launcher",
+            "com.teslacoilsw.launcher",           // Nova Launcher
+            "android",                             // Android 시스템
+            "com.android.systemui",               // 시스템 UI
+            "com.android.settings",               // 설정 (원하면 제거 가능)
+            "com.samsung.android.honeyboard",     // 삼성 키보드
+            "com.google.android.inputmethod.latin", // Gboard
+            "com.android.inputmethod.latin",
+        )
+
+        return excludeList.contains(packageName)
+    }
+
     private fun getAppName(packageName: String): String {
         return try {
             val info = packageManager.getApplicationInfo(packageName, 0)
             packageManager.getApplicationLabel(info).toString()
         } catch (e: PackageManager.NameNotFoundException) {
-            packageName
+            // 패키지명에서 마지막 부분만 추출 (com.anthropic.claude → claude)
+            packageName.split(".").lastOrNull()
+                ?.replaceFirstChar { it.uppercase() } ?: packageName
         }
     }
 }
