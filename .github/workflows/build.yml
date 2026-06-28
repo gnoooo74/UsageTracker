@@ -1,0 +1,36 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 수동 실행 버튼
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradle 실행 권한 부여
+        run: chmod +x gradlew
+
+      - name: Debug APK 빌드
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: APK 업로드 (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: UsageTracker-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
