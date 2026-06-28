@@ -9,7 +9,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
     override suspend fun doWork(): Result {
         return try {
             val repository = TrackerRepository(applicationContext)
-            repository.syncAppUsage()
+            repository.syncAppUsage(null) // null = 오늘
             Result.success()
         } catch (e: Exception) {
             Result.retry()

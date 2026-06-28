@@ -29,7 +29,7 @@ class TrackingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
-            repository.syncAppUsage()
+            repository.syncAppUsage(null) // null = 오늘
         }
         return START_STICKY
     }

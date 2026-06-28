@@ -22,11 +22,16 @@ class TrackerRepository(private val context: Context) {
     fun getAppSummaryByDate(date: String): LiveData<List<AppSummary>> =
         appUsageDao.getAppSummaryByDate(date)
 
-    suspend fun syncAppUsage() {
+    suspend fun syncAppUsage(dateStr: String? = null) {
         if (!usageCollector.hasPermission()) return
-        val records = usageCollector.collectToday()
-        val today = dateFormat.format(Date())
-        appUsageDao.deleteByDate(today)
+
+        val targetDateStr = dateStr ?: dateFormat.format(Date())
+        val targetCal = Calendar.getInstance()
+        val parsedDate = dateFormat.parse(targetDateStr)
+        if (parsedDate != null) targetCal.time = parsedDate
+
+        val records = usageCollector.collectForDate(targetCal)
+        appUsageDao.deleteByDate(targetDateStr)
         appUsageDao.deleteOldData(getPastDate(30))
         if (records.isNotEmpty()) {
             appUsageDao.insertAll(records)

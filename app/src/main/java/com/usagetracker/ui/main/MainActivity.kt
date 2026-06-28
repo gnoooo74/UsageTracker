@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         DatePickerDialog(this, { _, year, month, day ->
             cal.set(year, month, day)
             viewModel.setDate(storageDateFormat.format(cal.time))
-            viewModel.sync()
+            // setDate() 내부에서 sync() 자동 호출
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
 }

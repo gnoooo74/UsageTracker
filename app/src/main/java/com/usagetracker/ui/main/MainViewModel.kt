@@ -30,17 +30,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setDate(date: String) {
         _selectedDate.value = date
+        sync()
     }
 
     fun setToday() {
         _selectedDate.value = dateFormat.format(Date())
+        sync()
     }
 
     fun sync() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.syncAppUsage()
+                repository.syncAppUsage(_selectedDate.value)
                 _syncMessage.value = "동기화 완료"
             } catch (e: Exception) {
                 _syncMessage.value = "동기화 실패: ${e.message}"
