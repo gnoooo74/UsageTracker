@@ -11,7 +11,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         return try {
             val repository = TrackerRepository(applicationContext)
             repository.syncAppUsage()
-            repository.syncBrowserHistory()
+            repository.cleanupOldBrowserHistory()
             Result.success()
         } catch (e: Exception) {
             Result.retry()

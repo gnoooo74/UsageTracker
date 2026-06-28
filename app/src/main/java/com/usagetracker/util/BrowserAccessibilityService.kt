@@ -21,7 +21,8 @@ import java.util.*
  */
 class BrowserAccessibilityService : AccessibilityService() {
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     // 마지막으로 저장한 URL (연속 중복 방지)
@@ -172,6 +173,6 @@ class BrowserAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        scope.coroutineContext[SupervisorJob()]?.cancel()
+        job.cancel()
     }
 }

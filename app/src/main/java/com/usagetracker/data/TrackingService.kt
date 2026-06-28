@@ -31,7 +31,7 @@ class TrackingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
             repository.syncAppUsage()
-            repository.syncBrowserHistory()
+            repository.cleanupOldBrowserHistory()
         }
         return START_STICKY
     }
