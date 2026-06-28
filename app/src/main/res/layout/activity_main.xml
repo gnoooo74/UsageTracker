@@ -19,15 +19,6 @@
             app:subtitleTextColor="@android:color/white"
             app:title="@string/app_name"/>
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            app:tabTextColor="@android:color/white"
-            app:tabSelectedTextColor="@android:color/white"
-            app:tabIndicatorColor="@android:color/white"/>
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -42,32 +33,16 @@
             android:orientation="vertical">
 
             <!-- 요약 바 -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:background="@color/surface_color"
                 android:padding="12dp"
-                android:elevation="2dp">
-
-                <TextView
-                    android:id="@+id/tvSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:text="로딩중..."/>
-
-                <TextView
-                    android:id="@+id/tvBrowserCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:visibility="gone"/>
-
-            </LinearLayout>
+                android:elevation="2dp"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:text="로딩중..."/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerView"

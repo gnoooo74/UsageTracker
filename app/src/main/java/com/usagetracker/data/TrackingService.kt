@@ -7,7 +7,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.usagetracker.R
 import com.usagetracker.data.repository.TrackerRepository
 import kotlinx.coroutines.*
 
@@ -31,7 +30,6 @@ class TrackingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
             repository.syncAppUsage()
-            repository.cleanupOldBrowserHistory()
         }
         return START_STICKY
     }
@@ -45,20 +43,15 @@ class TrackingService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            "사용 기록 추적",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "앱 및 브라우저 사용 기록을 수집합니다"
-        }
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
+            CHANNEL_ID, "사용 기록 추적", NotificationManager.IMPORTANCE_LOW
+        ).apply { description = "앱 사용 기록을 수집합니다" }
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Usage Tracker")
-            .setContentText("사용 기록을 수집하고 있습니다")
+            .setContentText("앱 사용 기록을 수집하고 있습니다")
             .setSmallIcon(android.R.drawable.ic_menu_info_details)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
