@@ -7,4 +7,5 @@
     <string name="sync_complete">동기화 완료</string>
     <string name="action_date_picker">날짜 선택</string>
     <string name="action_permission">권한 설정</string>
+    <string name="accessibility_description">브라우저 방문 URL을 자동으로 기록합니다 (크롬, 삼성인터넷 등)</string>
 </resources>

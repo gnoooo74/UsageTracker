@@ -50,6 +50,10 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "앱 사용 통계 권한이 필요합니다", Toast.LENGTH_LONG).show()
             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
+        if (!viewModel.hasAccessibilityPermission) {
+            Toast.makeText(this, "브라우저 기록을 위해 접근성 권한이 필요합니다", Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
     }
 
     private fun setupRecyclerViews() {

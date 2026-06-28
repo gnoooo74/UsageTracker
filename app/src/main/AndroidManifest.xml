@@ -6,8 +6,8 @@
         tools:ignore="ProtectedPermissions"
         xmlns:tools="http://schemas.android.com/tools"/>
 
-    <!-- 브라우저 히스토리 읽기 (크롬/삼성인터넷) -->
-    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
+    <!-- 브라우저 히스토리 읽기 (AccessibilityService 방식으로 대체됨) -->
+    <!-- <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/> -->
 
     <!-- 포그라운드 서비스 (실시간 수집) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -47,6 +47,20 @@
             android:name=".data.TrackingService"
             android:exported="false"
             android:foregroundServiceType="dataSync"/>
+
+        <!-- 브라우저 URL 실시간 수집 AccessibilityService -->
+        <service
+            android:name=".util.BrowserAccessibilityService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config"/>
+        </service>
 
         <!-- 부팅 완료 리시버 -->
         <receiver

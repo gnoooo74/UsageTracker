@@ -26,6 +26,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val syncMessage: LiveData<String> = _syncMessage
 
     val hasUsagePermission: Boolean get() = repository.hasUsagePermission()
+    val hasAccessibilityPermission: Boolean get() = repository.hasAccessibilityPermission()
 
     // 날짜 변경 시 자동으로 LiveData 전환
     val appUsageList: LiveData<List<AppUsageEntity>> = _selectedDate.switchMap { date ->
@@ -60,7 +61,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             try {
                 repository.syncAppUsage()
-                repository.syncBrowserHistory()
+                repository.cleanupOldBrowserHistory()
                 _syncMessage.value = "동기화 완료"
             } catch (e: Exception) {
                 _syncMessage.value = "동기화 실패: ${e.message}"
