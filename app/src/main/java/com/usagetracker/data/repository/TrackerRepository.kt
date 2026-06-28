@@ -36,10 +36,11 @@ class TrackerRepository(context: Context) {
     suspend fun syncAppUsage() {
         if (!usageCollector.hasPermission()) return
         val records = usageCollector.collectToday()
+        val today = dateFormat.format(Date())
+        // 오늘 데이터 완전 삭제 후 재삽입 (중복 누적 방지)
+        appUsageDao.deleteByDate(today)
+        appUsageDao.deleteOldData(getPastDate(30))
         if (records.isNotEmpty()) {
-            // 오늘 데이터 교체
-            val today = dateFormat.format(Date())
-            appUsageDao.deleteOldData(getPastDate(30))
             appUsageDao.insertAll(records)
         }
     }
@@ -66,8 +67,11 @@ class TrackerRepository(context: Context) {
             startTime = today.timeInMillis,
             endTime = System.currentTimeMillis()
         )
+        val todayStr = dateFormat.format(Date())
+        // 오늘 데이터 완전 삭제 후 재삽입 (중복 누적 방지)
+        browserHistoryDao.deleteByDate(todayStr)
+        browserHistoryDao.deleteOldData(getPastDate(30))
         if (records.isNotEmpty()) {
-            browserHistoryDao.deleteOldData(getPastDate(30))
             browserHistoryDao.insertAll(records)
         }
     }

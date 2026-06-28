@@ -43,6 +43,10 @@ interface BrowserHistoryDao {
     """)
     fun getTopDomainsByDate(date: String): LiveData<List<DomainSummary>>
 
+    /** 특정 날짜 데이터 전체 삭제 (새로고침 시 오늘 데이터 교체용) */
+    @Query("DELETE FROM browser_history WHERE date = :date")
+    suspend fun deleteByDate(date: String)
+
     /** 30일 이전 데이터 삭제 */
     @Query("DELETE FROM browser_history WHERE date < :cutoffDate")
     suspend fun deleteOldData(cutoffDate: String)
