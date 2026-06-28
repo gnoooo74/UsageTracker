@@ -13,9 +13,13 @@ interface AppUsageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<AppUsageEntity>)
 
-    /** 특정 날짜의 앱 사용 기록 (최근 사용순) */
+    /** 특정 날짜의 앱 사용 기록 (최근 사용순) - 전체 */
     @Query("SELECT * FROM app_usage WHERE date = :date ORDER BY foregroundTime DESC")
     fun getByDate(date: String): LiveData<List<AppUsageEntity>>
+
+    /** 시스템 앱 제외한 기록만 */
+    @Query("SELECT * FROM app_usage WHERE date = :date AND isSystemApp = 0 ORDER BY foregroundTime DESC")
+    fun getByDateFiltered(date: String): LiveData<List<AppUsageEntity>>
 
     /** 특정 날짜 기록 (동기) */
     @Query("SELECT * FROM app_usage WHERE date = :date ORDER BY foregroundTime ASC")

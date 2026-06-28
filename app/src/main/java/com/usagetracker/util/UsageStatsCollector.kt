@@ -17,9 +17,25 @@ class UsageStatsCollector(private val context: Context) {
     private val packageManager = context.packageManager
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    /**
-     * 사용 통계 권한 확인
-     */
+    // 제외할 시스템/런처 앱 패키지 목록
+    val excludePackages = setOf(
+        "com.sec.android.app.launcher",
+        "com.sec.android.app.launcher3",
+        "com.android.launcher",
+        "com.android.launcher2",
+        "com.android.launcher3",
+        "com.google.android.apps.nexuslauncher",
+        "com.microsoft.launcher",
+        "com.action.launcher",
+        "com.teslacoilsw.launcher",
+        "android",
+        "com.android.systemui",
+        "com.android.settings",
+        "com.samsung.android.honeyboard",
+        "com.google.android.inputmethod.latin",
+        "com.android.inputmethod.latin",
+    )
+
     fun hasPermission(): Boolean {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         val mode = appOps.checkOpNoThrow(
@@ -30,10 +46,6 @@ class UsageStatsCollector(private val context: Context) {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
-    /**
-     * 특정 날짜의 앱 사용 이벤트 수집
-     * ACTIVITY_RESUMED → ACTIVITY_PAUSED/STOPPED 쌍으로 매칭
-     */
     fun collectForDate(date: Calendar): List<AppUsageEntity> {
         val startOfDay = date.clone() as Calendar
         startOfDay.set(Calendar.HOUR_OF_DAY, 0)
@@ -47,45 +59,36 @@ class UsageStatsCollector(private val context: Context) {
         return collectEvents(startOfDay.timeInMillis, endOfDay.timeInMillis)
     }
 
-    /**
-     * 오늘 하루 수집
-     */
-    fun collectToday(): List<AppUsageEntity> {
-        return collectForDate(Calendar.getInstance())
-    }
+    fun collectToday(): List<AppUsageEntity> = collectForDate(Calendar.getInstance())
 
     /**
-     * 지정 시간 범위 이벤트 수집 및 파싱
+     * filterSystem: true = 시스템/런처 앱 제외, false = 전체
+     * minDurationMs: 0 = 1ms 이상 전부, 1000 = 1초 이상만
      */
     private fun collectEvents(startTime: Long, endTime: Long): List<AppUsageEntity> {
         val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
         val event = UsageEvents.Event()
-
         val resumeMap = mutableMapOf<String, Long>()
         val result = mutableListOf<AppUsageEntity>()
         val dateStr = dateFormat.format(Date(startTime))
 
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(event)
-
             val packageName = event.packageName ?: continue
-
-            // 자기 자신 및 시스템 앱 제외
-            if (shouldExclude(packageName)) continue
+            if (packageName == context.packageName) continue  // 자기 자신만 제외
 
             when (event.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
                     resumeMap[packageName] = event.timeStamp
                 }
-
                 UsageEvents.Event.ACTIVITY_PAUSED,
                 UsageEvents.Event.ACTIVITY_STOPPED -> {
                     val resumeTime = resumeMap.remove(packageName) ?: continue
                     val duration = event.timeStamp - resumeTime
-
-                    if (duration < 1000) continue
+                    if (duration <= 0) continue  // 음수만 제외, 1ms 이상 전부 기록
 
                     val appName = getAppName(packageName)
+                    val isSystem = excludePackages.contains(packageName)
                     result.add(
                         AppUsageEntity(
                             packageName = packageName,
@@ -93,18 +96,20 @@ class UsageStatsCollector(private val context: Context) {
                             foregroundTime = resumeTime,
                             backgroundTime = event.timeStamp,
                             durationMs = duration,
-                            date = dateStr
+                            date = dateStr,
+                            isSystemApp = isSystem
                         )
                     )
                 }
             }
         }
 
-        // 아직 종료 안 된 앱 (현재 사용중)
+        // 현재 사용중인 앱
         val now = System.currentTimeMillis()
         resumeMap.forEach { (packageName, resumeTime) ->
             if (resumeTime < now) {
                 val appName = getAppName(packageName)
+                val isSystem = excludePackages.contains(packageName)
                 result.add(
                     AppUsageEntity(
                         packageName = packageName,
@@ -112,42 +117,14 @@ class UsageStatsCollector(private val context: Context) {
                         foregroundTime = resumeTime,
                         backgroundTime = null,
                         durationMs = now - resumeTime,
-                        date = dateStr
+                        date = dateStr,
+                        isSystemApp = isSystem
                     )
                 )
             }
         }
 
-        return result.sortedBy { it.foregroundTime }
-    }
-
-    /**
-     * 제외할 시스템/런처 앱 패키지
-     */
-    private fun shouldExclude(packageName: String): Boolean {
-        // 자기 자신
-        if (packageName == context.packageName) return true
-
-        // 제외할 시스템 앱 목록
-        val excludeList = setOf(
-            "com.sec.android.app.launcher",       // 삼성 런처
-            "com.sec.android.app.launcher3",
-            "com.android.launcher",               // 기본 런처
-            "com.android.launcher2",
-            "com.android.launcher3",
-            "com.google.android.apps.nexuslauncher",
-            "com.microsoft.launcher",
-            "com.action.launcher",
-            "com.teslacoilsw.launcher",           // Nova Launcher
-            "android",                             // Android 시스템
-            "com.android.systemui",               // 시스템 UI
-            "com.android.settings",               // 설정 (원하면 제거 가능)
-            "com.samsung.android.honeyboard",     // 삼성 키보드
-            "com.google.android.inputmethod.latin", // Gboard
-            "com.android.inputmethod.latin",
-        )
-
-        return excludeList.contains(packageName)
+        return result.sortedByDescending { it.foregroundTime }
     }
 
     private fun getAppName(packageName: String): String {
@@ -155,7 +132,6 @@ class UsageStatsCollector(private val context: Context) {
             val info = packageManager.getApplicationInfo(packageName, 0)
             packageManager.getApplicationLabel(info).toString()
         } catch (e: PackageManager.NameNotFoundException) {
-            // 패키지명에서 마지막 부분만 추출 (com.anthropic.claude → claude)
             packageName.split(".").lastOrNull()
                 ?.replaceFirstChar { it.uppercase() } ?: packageName
         }

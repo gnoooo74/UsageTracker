@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
     private val displayDateFormat = SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN)
     private val storageDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
+    private var filterMenuItem: MenuItem? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -76,6 +78,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.syncMessage.observe(this) { msg ->
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
+
+        // 필터 상태 변경 시 메뉴 타이틀 업데이트
+        viewModel.filterSystem.observe(this) { isFiltered ->
+            filterMenuItem?.title = if (isFiltered) "전체 앱 보기" else "필터링된 앱 보기"
+        }
     }
 
     private fun setupListeners() {
@@ -89,12 +96,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+        filterMenuItem = menu.findItem(R.id.action_filter)
+        // 초기 타이틀 설정
+        filterMenuItem?.title = if (viewModel.filterSystem.value == true) "전체 앱 보기" else "필터링된 앱 보기"
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_date_picker -> { showDatePicker(); true }
+            R.id.action_filter -> {
+                viewModel.toggleFilter()
+                true
+            }
             R.id.action_permission -> {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
                 true
@@ -108,7 +122,6 @@ class MainActivity : AppCompatActivity() {
         DatePickerDialog(this, { _, year, month, day ->
             cal.set(year, month, day)
             viewModel.setDate(storageDateFormat.format(cal.time))
-            // setDate() 내부에서 sync() 자동 호출
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
 }

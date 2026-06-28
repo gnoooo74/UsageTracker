@@ -16,8 +16,9 @@ class TrackerRepository(private val context: Context) {
     private val usageCollector = UsageStatsCollector(context)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    fun getAppUsageByDate(date: String): LiveData<List<AppUsageEntity>> =
-        appUsageDao.getByDate(date)
+    fun getAppUsageByDate(date: String, filterSystem: Boolean = true): LiveData<List<AppUsageEntity>> =
+        if (filterSystem) appUsageDao.getByDateFiltered(date)
+        else appUsageDao.getByDate(date)
 
     fun getAppSummaryByDate(date: String): LiveData<List<AppSummary>> =
         appUsageDao.getAppSummaryByDate(date)

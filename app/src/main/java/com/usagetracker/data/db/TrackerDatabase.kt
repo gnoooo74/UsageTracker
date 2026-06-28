@@ -8,7 +8,7 @@ import com.usagetracker.data.model.AppUsageEntity
 
 @Database(
     entities = [AppUsageEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class TrackerDatabase : RoomDatabase() {

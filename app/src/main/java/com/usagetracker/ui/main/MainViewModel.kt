@@ -22,11 +22,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _syncMessage = MutableLiveData<String>()
     val syncMessage: LiveData<String> = _syncMessage
 
+    // 필터 상태: true = 시스템 앱 제외, false = 전체 보기
+    private val _filterSystem = MutableLiveData(true)
+    val filterSystem: LiveData<Boolean> = _filterSystem
+
     val hasUsagePermission: Boolean get() = repository.hasUsagePermission()
 
-    val appUsageList: LiveData<List<AppUsageEntity>> = _selectedDate.switchMap { date ->
-        repository.getAppUsageByDate(date)
-    }
+    // 날짜 + 필터 상태 조합으로 LiveData 전환
+    val appUsageList: LiveData<List<AppUsageEntity>> =
+        MediatorLiveData<List<AppUsageEntity>>().also { mediator ->
+            var currentDate = _selectedDate.value ?: dateFormat.format(Date())
+            var currentFilter = _filterSystem.value ?: true
+            var currentSource: LiveData<List<AppUsageEntity>>? = null
+
+            fun resubscribe() {
+                currentSource?.let { mediator.removeSource(it) }
+                val newSource = repository.getAppUsageByDate(currentDate, currentFilter)
+                mediator.addSource(newSource) { mediator.value = it }
+                currentSource = newSource
+            }
+
+            mediator.addSource(_selectedDate) { date ->
+                currentDate = date
+                resubscribe()
+            }
+            mediator.addSource(_filterSystem) { filter ->
+                currentFilter = filter
+                resubscribe()
+            }
+
+            resubscribe()
+        }
 
     fun setDate(date: String) {
         _selectedDate.value = date
@@ -36,6 +62,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setToday() {
         _selectedDate.value = dateFormat.format(Date())
         sync()
+    }
+
+    fun toggleFilter() {
+        _filterSystem.value = !(_filterSystem.value ?: true)
     }
 
     fun sync() {
