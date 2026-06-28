@@ -5,17 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.usagetracker.data.model.AppUsageEntity
-import com.usagetracker.data.model.BrowserHistoryEntity
 
 @Database(
-    entities = [AppUsageEntity::class, BrowserHistoryEntity::class],
-    version = 1,
+    entities = [AppUsageEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class TrackerDatabase : RoomDatabase() {
 
     abstract fun appUsageDao(): AppUsageDao
-    abstract fun browserHistoryDao(): BrowserHistoryDao
 
     companion object {
         @Volatile
