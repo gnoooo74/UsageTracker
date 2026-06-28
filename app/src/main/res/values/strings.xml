@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Usage Tracker</string>
+    <string name="tab_app_usage">앱 사용</string>
+    <string name="tab_browser">브라우저</string>
+    <string name="permission_required">앱 사용 통계 권한이 필요합니다</string>
+    <string name="sync_complete">동기화 완료</string>
+    <string name="action_date_picker">날짜 선택</string>
+    <string name="action_permission">권한 설정</string>
+</resources>

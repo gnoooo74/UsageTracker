@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_date_picker"
+        android:title="날짜 선택"
+        android:icon="@android:drawable/ic_menu_my_calendar"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_permission"
+        android:title="권한 설정"
+        app:showAsAction="never"/>
+
+</menu>

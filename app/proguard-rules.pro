@@ -1,0 +1,2 @@
+-keep class com.usagetracker.data.model.** { *; }
+-keep class com.usagetracker.data.db.** { *; }
